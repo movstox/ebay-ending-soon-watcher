@@ -8,6 +8,6 @@
   },
   "addons": [
     "logentries:le_tryit",
-    "airbrake:free_heroku"
+    "airbrake:free-hrku"
   ]
 }
