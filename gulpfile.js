@@ -11,6 +11,9 @@ var paths = {
     scripts: ['src/**/*.coffee']
 };
 
+CoffeeScript = require('coffee-script')
+CoffeeScript.register()
+
 // Not all tasks need to use streams
 // A gulpfile is just another node program and you can use any package available on npm
 gulp.task('clean', function() {
@@ -21,31 +24,38 @@ gulp.task('clean', function() {
 gulp.task('scripts', ['clean'], function() {
     // Minify and copy all JavaScript (except vendor scripts)
     // with sourcemaps all the way down
-    return gulp
-        // gulp-mocha needs filepaths so you can't have any plugins before it 
-        .pipe(mocha({ reporter: 'nyan' }))
-        .pipe(coffee())
-        .pipe(uglify())
-        .pipe(babel({
-            presets: ['es2015']
-        }))
-        .pipe(concat('app.min.js'))
-        .pipe(gulp.dest('dist'));
+    return gulp.src('src/**/*.coffee')
+      .pipe(mocha({ reporter: 'nyan' }))
+      .pipe(coffee())
+      .pipe(uglify())
+      .pipe(babel({
+          presets: ['es2015']
+      }))
+      .pipe(concat('app.min.js'))
+      .pipe(gulp.dest('dist'));
 });
 
 gulp.task('test',  function ()  {
     return  gulp.src('test.js',   { read:  false })
-        // gulp-mocha needs filepaths so you can't have any plugins before it 
-        .pipe(mocha({ reporter:   'nyan' }));
+      // gulp-mocha needs filepaths so you can't have any plugins before it 
+      .pipe(mocha({ reporter:   'nyan' }));
 });
 
 gulp.task('start', function() {
-    nodemon({
-        script: 'dist/app.min.js',
-        ext: 'coffee js html',
-        env: { 'NODE_ENV': 'development' }
-    })
-});
+    var stream =     nodemon({
+            script: 'dist/app.min.js',
+            ext: 'coffee js html',
+            env: { 'NODE_ENV': 'development' }
+        })
+
+    stream
+        .on('restart', function () {
+          console.log('restarted!')
+        })
+        .on('crash', function() {
+          console.error('Application has crashed!\n')
+           stream.emit('restart', 10)  // restart the server in 10 seconds
+        })});
 
 // Rerun the task when a file changes
 gulp.task('watch', function() {

@@ -1,5 +1,6 @@
 if process.env.NODE_ENV != 'production'
   require('dotenv').config()
+
 #Lets require/import the HTTP module
 restify = require('restify')
 trim = require('trim')
@@ -16,14 +17,15 @@ server.get '/ebay-ending-soon/:name', (req, res, next) ->
   lh_complete = req.params.LH_Complete || 0
   lh_sold = req.params.LH_Sold || 0
   lh_bin = req.params.LH_BIN || 0
-  search_url = "http://www.ebay.com/sch/i.html?_from=R40&_sacat=0&_nkw=#{req.params.name}&_sop=1&_udlo=#{req.params.price_low}&_udhi=#{req.params.price_high}&LH_Complete=#{lh_complete}&LH_Sold=#{req.params.lh_sold}&LH_BIN=#{req.params.lh_bin}&LH_ItemCondition=1000|1500|3000"
-  
+
+  search_url = "http://www.ebay.com/sch/i.html?_from=R40&_sacat=0&_nkw=#{req.params.name}&_sop=1&_udlo=#{req.params.price_low}&_udhi=#{req.params.price_high}&LH_Complete=#{lh_complete}&LH_Sold=#{lh_sold}&LH_BIN=#{lh_bin}&LH_ItemCondition=1000|1500|3000"
+
   console.log search_url
   request search_url, (error, response, body) ->
     if response.statusCode == 200
       $ = cheerio.load(body)
       itemsData = for ebayListing in $('.sresult')[..5] # take 5 items
-          {     
+          {
               title: trim($(ebayListing).find('h3.lvtitle').text())
               price: parseFloat(trim($(ebayListing).find('.lvprice').text()).replace(',', '').replace('$',''))
               endsAt: parseInt($(ebayListing).find('.timeleft .timeMs').attr('timems'))
