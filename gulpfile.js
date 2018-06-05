@@ -8,7 +8,8 @@ var del = require('del');
 var mocha = require('gulp-mocha');
 
 var paths = {
-    scripts: ['src/**/*.coffee']
+  scripts: ['src/**/*.coffee'],
+  tests: ['test/**/*.coffee', 'test/**/*.js']
 };
 
 CoffeeScript = require('coffee-script')
@@ -17,49 +18,36 @@ CoffeeScript.register()
 // Not all tasks need to use streams
 // A gulpfile is just another node program and you can use any package available on npm
 gulp.task('clean', function() {
-    // You can use multiple globbing patterns as you would with `gulp.src`
-    return del(['build']);
+  // You can use multiple globbing patterns as you would with `gulp.src`
+  return del(['build']);
 });
 
-gulp.task('scripts', ['clean'], function() {
-    // Minify and copy all JavaScript (except vendor scripts)
-    // with sourcemaps all the way down
-    return gulp.src('src/**/*.coffee')
-      .pipe(mocha({ reporter: 'nyan' }))
-      .pipe(coffee())
-      .pipe(uglify())
-      .pipe(babel({
-          presets: ['es2015']
-      }))
-      .pipe(concat('app.min.js'))
-      .pipe(gulp.dest('dist'));
+gulp.task('scripts', ['clean', 'test'], function() {
+  // Minify and copy all JavaScript (except vendor scripts)
+  // with sourcemaps all the way down
+  return gulp.src('src/**/*.coffee')
+    .pipe(coffee()).pipe(uglify()).pipe(babel({presets: ['es2015']})).pipe(concat('app.min.js')).pipe(gulp.dest('dist'));
 });
 
-gulp.task('test',  function ()  {
-    return  gulp.src('test.js',   { read:  false })
-      // gulp-mocha needs filepaths so you can't have any plugins before it 
-      .pipe(mocha({ reporter:   'nyan' }));
+gulp.task('test', function() {
+  return gulp.src('test/test.js', {read: false})
+  // gulp-mocha needs filepaths so you can't have any plugins before it
+    .pipe(mocha({reporter: 'nyan'}));
 });
 
 gulp.task('start', function() {
-    var stream =     nodemon({
-            script: 'dist/app.min.js',
-            ext: 'coffee js html',
-            env: { 'NODE_ENV': 'development' }
-        })
-
-    stream
-        .on('restart', function () {
-          console.log('restarted!')
-        })
-        .on('crash', function() {
-          console.error('Application has crashed!\n')
-           stream.emit('restart', 10)  // restart the server in 10 seconds
-        })});
-
+  var stream = nodemon({
+    script: 'dist/app.min.js',
+    ext: 'coffee js html',
+    env: {
+      'NODE_ENV': 'development'
+    }
+  })
+});
 // Rerun the task when a file changes
 gulp.task('watch', function() {
-    gulp.watch(paths.scripts, ['scripts']);
+  gulp.watch(paths.scripts, ['test', 'scripts']);
+  gulp.watch(paths.tests, ['test']);
 });
 // The default task (called when you run `gulp` from cli)
-gulp.task('default', ['scripts', 'test', 'watch', 'start']);
+gulp.task('default', ['scripts', 'test', 'start', 'watch']);

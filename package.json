@@ -7,16 +7,14 @@
   },
   "dependencies": {
     "cheerio": "^0.20.0",
-    "gulp": "^3.9.1",
     "request": "^2.72.0",
     "restify": "^4.0.4",
     "trim": "0.0.1"
   },
   "devDependencies": {
-    "chai": "*",
-    "mocha": "*",
     "babel": "^6.5.2",
     "babel-preset-es2015": "^6.6.0",
+    "chai": "*",
     "coffee-script": "^1.10.0",
     "del": "^2.2.0",
     "dotenv": "^2.0.0",
@@ -28,6 +26,7 @@
     "gulp-nodemon": "^2.0.6",
     "gulp-uglify": "^1.5.3",
     "gulp-util": "^3.0.7",
+    "mocha": "*",
     "nodemon": "^1.9.1"
   },
   "license": "MIT"
