@@ -62,6 +62,36 @@ server.get '/amazon-offer/:itemId', (req, res, next) ->
     else
       res.send({error: res.statusCode})
 
+topFiveEbayItems = (jQuery) -> jQuery('.s-item')[..5]
+
+extractEbayListingData = (jQuery, ebayListing)->
+  newListingFlag = jQuery(ebayListing).find('.LIGHT_HIGHLIGHT').text() == 'New Listing'
+  buyItNowFlag = (jQuery(ebayListing).find('.s-item__purchase-options').text() == 'Buy It Now')
+  bids = parseInt(jQuery(ebayListing).find('.s-item__bids ').text())
+  {
+    title: trim(jQuery(ebayListing).find('h3.s-item__title').text())
+    buyItNowFlag: buyItNowFlag
+    newListingFlag: newListingFlag
+    bids: bids
+    price: parseFloat(trim(jQuery(ebayListing).find('.s-item__price').text()).replace(',', '').replace('$',''))
+    timeLeftText: jQuery(ebayListing).find('.s-item__time-left').text().split(' left')[0]
+    endsAt: parseInt(jQuery(ebayListing).find('.timeleft .timeMs').attr('timems'))
+    itemListingUrl: (jQuery(ebayListing).find('.s-item__link').attr('href'))
+    itemPictureUrl: (jQuery(ebayListing).find('.s-item__image-img').attr('src'))
+  }
+
+server.get '/ebay-new-listings/:name', (req, res, next) ->
+  search_url = "http://www.ebay.#{req.params.domain || 'com'}/sch/i.html?_from=R40&_sacat=0&_nkw=#{req.params.name}&_sop=10&_udlo=#{req.params.price_low}&_udhi=#{req.params.price_high}&LH_ItemCondition=1000|1500|3000"
+
+  console.log search_url
+
+  request search_url, (error, response, body) ->
+    $ = cheerio.load(body)
+    itemsData = for ebayListing in topFiveEbayItems($)
+      extractEbayListingData($, ebayListing)
+    res.send(itemsData)
+  next()
+
 server.get '/ebay-ending-soon/:name', (req, res, next) ->
   lh_complete = req.params.LH_Complete || 0
   lh_sold = req.params.LH_Sold || 0
@@ -74,14 +104,15 @@ server.get '/ebay-ending-soon/:name', (req, res, next) ->
   request search_url, (error, response, body) ->
     if response.statusCode == 200
       $ = cheerio.load(body)
-      itemsData = for ebayListing in $('.sresult')[..5] # take 5 items
-          {
-              title: trim($(ebayListing).find('h3.lvtitle').text())
-              price: parseFloat(trim($(ebayListing).find('.lvprice').text()).replace(',', '').replace('$',''))
-              endsAt: parseInt($(ebayListing).find('.timeleft .timeMs').attr('timems'))
-              itemListingUrl: ($(ebayListing).find('.lvtitle a').attr('href'))
-              itemPictureUrl: ($(ebayListing).find('.lvpic img').attr('src'))
-          }
+      itemsData = for ebayListing in topFiveEbayItems($) # take 5 items
+        extractEbayListingData($, ebayListing)
+          # {
+          #     title: trim($(ebayListing).find('h3.lvtitle').text())
+          #     price: parseFloat(trim($(ebayListing).find('.lvprice').text()).replace(',', '').replace('$',''))
+          #     endsAt: parseInt($(ebayListing).find('.timeleft .timeMs').attr('timems'))
+          #     itemListingUrl: ($(ebayListing).find('.lvtitle a').attr('href'))
+          #     itemPictureUrl: ($(ebayListing).find('.lvpic img').attr('src'))
+          # }
       res.send(itemsData)
     return
   next()
