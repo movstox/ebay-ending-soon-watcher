@@ -1,8 +1,0 @@
-machine:
-  node:
-    version: 10.4.1
-deployment:
-  staging:
-    branch: develop
-    heroku:
-      appname: ebay-ending-watcher
